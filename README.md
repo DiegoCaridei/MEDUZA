@@ -56,7 +56,7 @@ There are two general steps. You need the first step to catch all certificates p
     ============================================================
     
     [*] Waiting for an iOS device connected to USB...
-    [*] A list of installed applications:
+    [*] Installed applications:
     	+ Uber (com.ubercab.UberClient) is running, pid=40663
     	- Home (com.apple.Home)
     	- Files (com.apple.DocumentsApp)
@@ -74,6 +74,20 @@ There are two general steps. You need the first step to catch all certificates p
     	- Maps (com.apple.Maps)
     	- Voice Memos (com.apple.VoiceMemos)
     	<...etc, you'll see remaining apps here...>
+    [*] Running processes (including system ones):
+        + backupd (pid=10562)
+        + frida-server (pid=10542)
+        + aggregated (pid=10531)
+        + com.apple.Safari.SafeBrowsing.Service (pid=10524)
+        + remindd (pid=10499)
+        + StoreFlowExtension (pid=10471)
+        + Music (pid=10470)
+        + com.apple.WebKit.WebContent (pid=10465)
+        + com.apple.WebKit.WebContent (pid=10464)
+        + com.apple.WebKit.Networking (pid=10461)
+        + Mail (pid=10458)
+        + Settings (pid=10457)
+        <...etc, you'll see remaining processes here...>
     ```
 
 2. **Important!** Make sure your iOS device WiFi settings are "clear", e.g. no proxy and/or custom router IP specified. On the first step, we **do not try to sniff the traffic**, so the WiFi network connection should be "as usual".
@@ -90,7 +104,7 @@ There are two general steps. You need the first step to catch all certificates p
     $ python3 meduza.py -s com.ubercab.UberClient ./unpinUber.js
     ```
 
-    Here `-s` means that Uber will be (re-)spawned. If you wanna connect to an already running app and do not re-spawn it, use `-a` instead of `-s`.
+    Here `-s` means that Uber will be (re-)spawned. If you wanna connect to an already running app/process and do not re-spawn it, use `-a <app name or id, or any process pid>` instead of `-s <app name of id>`.
 
     As result, you should see something like
 
@@ -135,7 +149,7 @@ There are two general steps. You need the first step to catch all certificates p
     <...etc, you can see many messages about certificates, it's ok...>
     ```
 
-4. Do something typical in the app: login, tap some buttons, logoff... e.g. act like an ordinary dumb user :) Every time the app uses a (pinned or not pinned) certificate to connect a server, MEDUZA catches and remembers the certificate.
+4. Do something typical in the app: login, tap some buttons, logoff... e.g. act like an ordinary dumb user and try to play any UX scenarious :) Every time the app fetches a (pinned or not pinned) certificate from servers, MEDUZA catches and remembers the certificate.
 
 5. As soon as you complete your monkey-tapping, press `ENTER` in the Terminal. MEDUZA will generate a script (e.g. `./unpinUber.js` in the example above).
 

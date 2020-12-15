@@ -16,19 +16,19 @@ class CertSpoofer:
         $ python3 meduza.py -l
         to list applications
         
-        $ python3 meduza.py -s <app name of id> path/to/frida/script.js
+        $ python3 meduza.py -s <app name or id> path/to/frida/script.js
         to spawn an application and generate an SSL (un)pinning Frida script
         
-        $ python3 meduza.py -a <app name of id> path/to/frida/script.js
+        $ python3 meduza.py -a <app name or id, or any process pid> path/to/frida/script.js
         to attach an application and generate an SSL (un)pinning Frida script
         
         $ python3 meduza.py -s <app name of id> path/to/frida/script.js payload.js
         to spawn an application and generate an SSL (un)pinning Frida script with a specially 
-        crafted payload (the payload.js should be placed alongside with the py file)
+        crafted payload (the payload.js should be placed alongside with the meduza.py file)
         
-        $ python3 meduza.py -a <app name of id> path/to/frida/script.js payload.js
+        $ python3 meduza.py -a <app name of id, or any process pid> path/to/frida/script.js payload.js
         to attach an application and generate an SSL (un)pinning Frida script with a specially 
-        crafted payload (the payload.js should be placed alongside with the py file)
+        crafted payload (the payload.js should be placed alongside with the meduza.py file)
     """
 
     CERTS = {}
@@ -40,12 +40,12 @@ class CertSpoofer:
         print(CertSpoofer.HELP)
         exit()
 
-    def list_applications(self, print_result=False):
+    def list_all(self, print_result=False):
         print("[*] Waiting for an iOS device connected to USB...")
         self.device = frida.get_usb_device()
         applications = self.device.enumerate_applications()
         if print_result:
-            print("[*] A list of installed applications:")
+            print("[*] Installed applications:")
             for app in applications:
                 print("\t{} {} ({}){}".format(
                     "-" if app.pid == 0 else "+",
@@ -53,12 +53,17 @@ class CertSpoofer:
                     app.identifier,
                     " is running, pid={}".format(app.pid) if app.pid != 0 else "")
                 )
-        return applications
+        processes = self.device.enumerate_processes()
+        if print_result:
+            print("[*] Running processes (including system ones):")
+            for process in processes:
+                print("\t+ {} (pid={})".format(process.name, process.pid))
+        return applications, processes
 
     def parse_command_line(self):
         if len(sys.argv) == 2 and sys.argv[1] == "-l":
             # List application on the device connected to USB
-            self.list_applications(print_result=True)
+            self.list_all(print_result=True)
             exit()
         elif len(sys.argv) > 3:
             # Parse 1st arg
@@ -71,28 +76,36 @@ class CertSpoofer:
                 print("[*] Unknown first argument {}".format(sys.argv[1]))
                 self.print_help_and_exit()
             # Parse 2nd arg
-            app_name_or_id = sys.argv[2]
-            applications = self.list_applications()
+            app_name_or_id_or_pid = sys.argv[2]
+            applications, processes = self.list_all()
             found = False
             for app in applications:
-                if app.name == app_name_or_id or app.identifier == app_name_or_id:
+                if app.name == app_name_or_id_or_pid or app.identifier == app_name_or_id_or_pid:
                     found = True
-                    self.app = app
+                    self.target = app
+                    break
             if not found:
-                print("[*] Application {} not found! Use -l to list installed/running apps".format(app_name_or_id))
+                for process in processes:
+                    if str(process.pid) == str(app_name_or_id_or_pid) or process.name == app_name_or_id_or_pid:
+                        found = True
+                        self.target = process
+                        break
+            if not found:
+                print("[*] Application/process {} not found! Use -l to list installed/running apps/processes"
+                      .format(app_name_or_id_or_pid))
                 CertSpoofer.print_help_and_exit()
-            if (not self.spawn) and (self.app.pid == 0):
+            if (not self.spawn) and (self.target.pid == 0):
                 print(
                     "[*] {} is not running. Please open the app and try again "
                     "or use -s to spawn the app with the script"
-                    .format(app_name_or_id)
+                    .format(app_name_or_id_or_pid)
                 )
                 CertSpoofer.print_help_and_exit()
             # Parse 3rd argument
             self.js_output_path = os.path.abspath(os.path.expandvars(os.path.expanduser(sys.argv[3])))
             if os.path.exists(self.js_output_path):
                 print(
-                    "[*] {} already exists, please specify a non-existing file in already existing directory, "
+                    "[*] {} already exists, please specify a non-existing file in an already existing directory, "
                     "the file will be created"
                     .format(self.js_output_path)
                 )
@@ -114,12 +127,15 @@ class CertSpoofer:
     def run_app(self):
         # Get app's pid
         if self.spawn:
-            print("[*] Spawning {}...".format(self.app.identifier))
-            pid = self.device.spawn([self.app.identifier])
+            print("[*] Spawning {}...".format(self.target.identifier))
+            pid = self.device.spawn([self.target.identifier])
         else:
-            pid = self.app.pid
+            pid = self.target.pid
         # Create session
-        print("[*] Attaching to {}...".format(self.app.identifier))
+        try:
+            print("[*] Attaching to {}...".format(self.target.identifier))
+        except AttributeError:
+            print("[*] Attaching to {} (pid={})...".format(self.target.name, self.target.pid))
         self.session = self.device.attach(pid)
         # Read the JS scripts
         print("[*] Reading JS payload {}...".format(self.payload))
@@ -198,7 +214,7 @@ class CertSpoofer:
     def __init__(self):
         # Init object fields with their default values
         self.spawn = None
-        self.app = None
+        self.target = None
         self.js_output_path = None
         self.device = None
         self.session = None
