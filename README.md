@@ -57,23 +57,23 @@ There are two general steps. You need the first step to catch all certificates p
     
     [*] Waiting for an iOS device connected to USB...
     [*] Installed applications:
-    	+ Uber (com.ubercab.UberClient) is running, pid=40663
-    	- Home (com.apple.Home)
-    	- Files (com.apple.DocumentsApp)
-    	- Podcasts (com.apple.podcasts)
-    	- Contacts (com.apple.MobileAddressBook)
-    	- Music (com.apple.Music)
-    	- Photos (com.apple.mobileslideshow)
-    	- TV (com.apple.tv)
-    	+ App Store (com.apple.AppStore) is running, pid=40627
-    	- Clock (com.apple.mobiletimer)
-    	+ Settings (com.apple.Preferences) is running, pid=40619
-    	- TikTok (com.zhiliaoapp.musically)
-    	- Watch (com.apple.Bridge)
-    	- FaceTime (com.apple.facetime)
-    	- Maps (com.apple.Maps)
-    	- Voice Memos (com.apple.VoiceMemos)
-    	<...etc, you'll see remaining apps here...>
+        + Uber (com.ubercab.UberClient) is running, pid=40663
+        - Home (com.apple.Home)
+        - Files (com.apple.DocumentsApp)
+        - Podcasts (com.apple.podcasts)
+        - Contacts (com.apple.MobileAddressBook)
+        - Music (com.apple.Music)
+        - Photos (com.apple.mobileslideshow)
+        - TV (com.apple.tv)
+        + App Store (com.apple.AppStore) is running, pid=40627
+        - Clock (com.apple.mobiletimer)
+        + Settings (com.apple.Preferences) is running, pid=40619
+        - TikTok (com.zhiliaoapp.musically)
+        - Watch (com.apple.Bridge)
+        - FaceTime (com.apple.facetime)
+        - Maps (com.apple.Maps)
+        - Voice Memos (com.apple.VoiceMemos)
+        <...etc, you'll see remaining apps here...>
     [*] Running processes (including system ones):
         + backupd (pid=10562)
         + frida-server (pid=10542)
@@ -95,7 +95,7 @@ There are two general steps. You need the first step to catch all certificates p
 3. Choose the app, e.g. Uber. Run MEDUZA as follows
 
     ```
-    $ python3 meduza.py -s <app name of id> <path/to/the/frida/script.js>
+    $ python3 meduza.py -s <app name or id> <path/to/the/frida/script.js>
     ```
 
     e.g.  for Uber
